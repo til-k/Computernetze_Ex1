@@ -125,6 +125,18 @@ int main(void)
 			close(sockfd); // child doesn't need the listener
 			if (send(new_fd, "Hello, world!", 13, 0) == -1)
 				perror("send");
+            while(1) {
+                int numbytes;
+                char buf[100];
+                if ((numbytes = recv(new_fd, buf, 100-1, 0)) == -1) {
+                    perror("recv");
+                    exit(1);
+                }
+
+                buf[numbytes] = '\0';
+
+                printf("received '%s'\n",buf);
+            }
 			close(new_fd);
 			exit(0);
 		}

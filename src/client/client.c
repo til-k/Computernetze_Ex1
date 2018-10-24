@@ -78,6 +78,11 @@ int main(int argc, char *argv[])
 
 	freeaddrinfo(servinfo); // all done with this structure
 
+    while(1) {
+        getc(stdin);
+        send(sockfd, "blabelblubbafasel", sizeof("blabelblubbafasel"), 0);
+    }
+
 	if ((numbytes = recv(sockfd, buf, MAXDATASIZE-1, 0)) == -1) {
 	    perror("recv");
 	    exit(1);
