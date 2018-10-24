@@ -40,20 +40,38 @@ char* parse(char* input) {
     printf("operator %s ", operator);
     printf("rightNumber %s ", rightNumber);
     
+    int left = strtol(leftNumber, NULL, 0);
+    int right = strtol(rightNumber, NULL, 0);
+    
     if(strlen(leftNumber) >= 2) {
         if(leftNumber[1] != 'x' && leftNumber[strlen(leftNumber)-1] == 'b') {
-            printf("binary");
+            left = strtol(leftNumber, NULL, 2);
+        }
+    }
+    if(strlen(rightNumber) >= 2) {
+        if(rightNumber[1] != 'x' && rightNumber[strlen(rightNumber)-1] == 'b') {
+            right = strtol(rightNumber, NULL, 2);
         }
     }
     
-    int left = strtol(leftNumber, NULL, 0);
-    int right = strtol(rightNumber, NULL, 0);
     int result = 0;
     switch(operator[0]) {
         case '+': result = left + right; break;
+        case '-': result = left - right; break;
+        case '*': result = left * right; break;
+        case '/': result = left / right; break;
     }
     
-    printf("%d", result);
+    char* output = malloc(100);
+    sprintf(output, "%d 0x%x ", result, result);
+    
+    free(leftNumber);
+    free(rightNumber);
+    free(operator);
+    
+    //printf("%s", output);
+    
+    return output;
 }
 
 void sigchld_handler(int s)
@@ -77,6 +95,12 @@ void *get_in_addr(struct sockaddr *sa)
 	}
 
 	return &(((struct sockaddr_in6*)sa)->sin6_addr);
+}
+
+
+char* parseInput(char* input)
+{
+    
 }
 
 int main(void)
@@ -160,8 +184,7 @@ int main(void)
 
 		if (!fork()) { // this is the child process
 			close(sockfd); // child doesn't need the listener
-			if (send(new_fd, "Hello, world!", 13, 0) == -1)
-				perror("send");
+			
             while(1) {
                 int numbytes;
                 char buf[100];
@@ -171,8 +194,10 @@ int main(void)
                 }
 
                 buf[numbytes] = '\0';
-                parse(buf);
-                printf("received '%s'\n",buf);
+                char* output = parse(buf);
+                //printf("received '%s'\n",parse(buf));
+                if (send(new_fd, output, strlen(output), 0) == -1)
+                    perror("send");
             }
 			close(new_fd);
 			exit(0);
