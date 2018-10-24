@@ -15,7 +15,7 @@
 #include <sys/wait.h>
 #include <signal.h>
 
-#define PORT "3490"  // the port users will be connecting to
+#define STD_PORT "5000"  // the port users will be connecting to
 
 #define BACKLOG 10	 // how many pending connections queue will hold
 
@@ -36,9 +36,9 @@ char* parse(char* input) {
     strncpy (operator, input+operatorPosition, 1);
     strncpy (rightNumber, input+operatorPosition+1, strlen(input+operatorPosition+1));
     
-    printf("leftNumber %s ", leftNumber);
-    printf("operator %s ", operator);
-    printf("rightNumber %s ", rightNumber);
+    //printf("leftNumber %s \n", leftNumber);
+    //printf("operator %s \n", operator);
+    //printf("rightNumber %s \n", rightNumber);
     
     int left = strtol(leftNumber, NULL, 0);
     int right = strtol(rightNumber, NULL, 0);
@@ -116,7 +116,7 @@ char* parseInput(char* input)
     
 }
 
-int main(void)
+int main(int argc, char *argv[])
 {
 	int sockfd, new_fd;  // listen on sock_fd, new connection on new_fd
 	struct addrinfo hints, *servinfo, *p;
@@ -132,7 +132,12 @@ int main(void)
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags = AI_PASSIVE; // use my IP
 
-	if ((rv = getaddrinfo(NULL, PORT, &hints, &servinfo)) != 0) {
+    char* port = STD_PORT;
+	if (argc == 2) {
+        port = argv[1];
+    }
+        
+	if ((rv = getaddrinfo(NULL, port, &hints, &servinfo)) != 0) {
 		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
 		return 1;
 	}
