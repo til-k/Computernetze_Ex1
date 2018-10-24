@@ -62,8 +62,21 @@ char* parse(char* input) {
         case '/': result = left / right; break;
     }
     
+    int result_buf = result;
+    int bin_str_len = 0;
+    char bin_str_buf[34];
+    
+    for(int i = 31; i>=0; i--) {
+        if(result_buf&1 == 1)
+            bin_str_len = i;
+        bin_str_buf[i] = '0' + (result_buf & 1);
+        result_buf = result_buf >> 1;
+    }
+    bin_str_buf[32] = 'b';
+    bin_str_buf[33] = '\0';
+    
     char* output = malloc(100);
-    sprintf(output, "%d 0x%x ", result, result);
+    sprintf(output, "%d 0x%X %s", result, result, &bin_str_buf[bin_str_len]);
     
     free(leftNumber);
     free(rightNumber);
