@@ -77,10 +77,12 @@ int main(int argc, char *argv[])
 	printf("client: connecting to %s\n", s);
 
 	freeaddrinfo(servinfo); // all done with this structure
-
+    
     while(1) {
-        getc(stdin);
-        send(sockfd, "blabelblubbafasel", sizeof("blabelblubbafasel"), 0);
+        memset(&buf, 0, 100);
+        if ( fgets (buf , 100 , stdin) != NULL ){
+            send(sockfd, buf, strlen(buf) - 1, 0);
+        }
     }
 
 	if ((numbytes = recv(sockfd, buf, MAXDATASIZE-1, 0)) == -1) {

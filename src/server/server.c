@@ -19,6 +19,43 @@
 
 #define BACKLOG 10	 // how many pending connections queue will hold
 
+char* parse(char* input) {
+    char* leftNumber = malloc(100);
+    char* rightNumber = malloc(100);
+    char* operator = malloc(1);
+    
+    int operatorPosition = -1;
+    for(int i = 0; i < strlen(input); i++) {
+        if(input[i]=='+' || input[i]=='-' || input[i]=='*' || input[i]=='/') {
+            operatorPosition = i;
+            break;
+        }
+    }
+    
+    strncpy (leftNumber, input, operatorPosition);
+    strncpy (operator, input+operatorPosition, 1);
+    strncpy (rightNumber, input+operatorPosition+1, strlen(input+operatorPosition+1));
+    
+    printf("leftNumber %s ", leftNumber);
+    printf("operator %s ", operator);
+    printf("rightNumber %s ", rightNumber);
+    
+    if(strlen(leftNumber) >= 2) {
+        if(leftNumber[1] != 'x' && leftNumber[strlen(leftNumber)-1] == 'b') {
+            printf("binary");
+        }
+    }
+    
+    int left = strtol(leftNumber, NULL, 0);
+    int right = strtol(rightNumber, NULL, 0);
+    int result = 0;
+    switch(operator[0]) {
+        case '+': result = left + right; break;
+    }
+    
+    printf("%d", result);
+}
+
 void sigchld_handler(int s)
 {
 	(void)s; // quiet unused variable warning
@@ -134,7 +171,7 @@ int main(void)
                 }
 
                 buf[numbytes] = '\0';
-
+                parse(buf);
                 printf("received '%s'\n",buf);
             }
 			close(new_fd);
