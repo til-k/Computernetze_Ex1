@@ -19,47 +19,92 @@
 
 #define BACKLOG 10	 // how many pending connections queue will hold
 
-char* parse(char* input) {
-    char* leftNumber = malloc(100);
-    char* rightNumber = malloc(100);
-    char* operator = malloc(1);
+#define MSG_BUF_SIZE 256
+
+char* parse(char* in_buf, char* out_buf) {
+    char leftNumber[MSG_BUF_SIZE];
+    char rightNumber[MSG_BUF_SIZE];
+    char operator = 0;
+    
+    memset(&leftNumber[0], 0, MSG_BUF_SIZE);
+    memset(&rightNumber[0], 0, MSG_BUF_SIZE);
     
     int operatorPosition = -1;
-    for(int i = 0; i < strlen(input); i++) {
-        if(input[i]=='+' || input[i]=='-' || input[i]=='*' || input[i]=='/') {
+    for(int i = 0; i < strlen(in_buf); i++) {
+        if(in_buf[i]=='+' || in_buf[i]=='-' || in_buf[i]=='*' || in_buf[i]=='/') {
             operatorPosition = i;
             break;
         }
     }
     
-    strncpy (leftNumber, input, operatorPosition);
-    strncpy (operator, input+operatorPosition, 1);
-    strncpy (rightNumber, input+operatorPosition+1, strlen(input+operatorPosition+1));
+    strncpy (&leftNumber[0], in_buf, operatorPosition);
+    operator = in_buf[operatorPosition];
+    //the -1 is needed so that we dont copy the \n into the rightNumber string
+    strncpy (&rightNumber[0], in_buf+operatorPosition+1, strlen(in_buf+operatorPosition+1)-1);
     
-    //printf("leftNumber %s \n", leftNumber);
-    //printf("operator %s \n", operator);
-    //printf("rightNumber %s \n", rightNumber);
-    
+    //hex gets auto detected
     int left = strtol(leftNumber, NULL, 0);
     int right = strtol(rightNumber, NULL, 0);
     
-    if(strlen(leftNumber) >= 2) {
-        if(leftNumber[1] != 'x' && leftNumber[strlen(leftNumber)-1] == 'b') {
+    //bin not, so we see if the condition for a binary number is fullfilled
+    int length = 0;
+    length = strlen(leftNumber);
+    if(length >= 2) {
+        if(leftNumber[1] != 'x' && leftNumber[length-1] == 'b') {
+            leftNumber[length-1] = '\0';
             left = strtol(leftNumber, NULL, 2);
         }
     }
-    if(strlen(rightNumber) >= 2) {
-        if(rightNumber[1] != 'x' && rightNumber[strlen(rightNumber)-1] == 'b') {
+    
+    length = strlen(rightNumber);
+    if(length >= 2) {
+        if(rightNumber[1] != 'x' && rightNumber[length-1] == 'b') {
+            rightNumber[length-1] = '\0';
             right = strtol(rightNumber, NULL, 2);
         }
     }
     
     int result = 0;
-    switch(operator[0]) {
-        case '+': result = left + right; break;
-        case '-': result = left - right; break;
-        case '*': result = left * right; break;
-        case '/': result = left / right; break;
+    switch(operator) {
+        case '+': {
+            result = left + right; 
+            //not the best solutions, but shits boring who cares
+            if(result < left + right) {
+                sprintf(out_buf, "Zahlen zu groß! Überlauf!");
+                return out_buf;
+            }
+            break;
+        }
+        case '-': {
+            result = left - right; 
+            //not the best solutions, but shits boring who cares
+            if(result > left - right) {
+                sprintf(out_buf, "Zahlen zu groß! Überlauf!");
+                return out_buf;
+            }
+            break;
+        }
+
+        case '*': {
+            result = left * right; 
+            //not the best solutions, but shits boring who cares
+            if(result < left * right) {
+                sprintf(out_buf, "Zahlen zu groß! Überlauf!");
+                return out_buf;
+            }
+            break;
+        }
+        case '/': {
+            if(right != 0) {
+                result = left / right; 
+                break;
+            }
+            else {
+                sprintf(out_buf, "Division durch null night möglich!");
+                return out_buf;
+                break;
+            }
+        }
     }
     
     int result_buf = result;
@@ -67,7 +112,7 @@ char* parse(char* input) {
     char bin_str_buf[34];
     
     for(int i = 31; i>=0; i--) {
-        if(result_buf&1 == 1)
+        if((result_buf & 1) == 1)
             bin_str_len = i;
         bin_str_buf[i] = '0' + (result_buf & 1);
         result_buf = result_buf >> 1;
@@ -75,16 +120,9 @@ char* parse(char* input) {
     bin_str_buf[32] = 'b';
     bin_str_buf[33] = '\0';
     
-    char* output = malloc(100);
-    sprintf(output, "%d 0x%X %s", result, result, &bin_str_buf[bin_str_len]);
+    sprintf(out_buf, "%d 0x%X %s", result, result, &bin_str_buf[bin_str_len]);
     
-    free(leftNumber);
-    free(rightNumber);
-    free(operator);
-    
-    //printf("%s", output);
-    
-    return output;
+    return out_buf;
 }
 
 void sigchld_handler(int s)
@@ -108,12 +146,6 @@ void *get_in_addr(struct sockaddr *sa)
 	}
 
 	return &(((struct sockaddr_in6*)sa)->sin6_addr);
-}
-
-
-char* parseInput(char* input)
-{
-    
 }
 
 int main(int argc, char *argv[])
@@ -204,19 +236,21 @@ int main(int argc, char *argv[])
 			close(sockfd); // child doesn't need the listener
 			
             while(1) {
-                int numbytes;
-                char buf[100];
-                memset(&buf,0,100);
-                if ((numbytes = recv(new_fd, buf, 100-1, 0)) == -1) {
+                char in_buf[MSG_BUF_SIZE];
+                char out_buf[MSG_BUF_SIZE];
+                memset(&in_buf,0,MSG_BUF_SIZE);
+                memset(&out_buf,0,MSG_BUF_SIZE);
+                
+                if (recv(new_fd, in_buf, MSG_BUF_SIZE, 0) == -1) {
                     perror("recv");
                     exit(1);
                 }
-
-                buf[numbytes] = '\0';
-                char* output = parse(buf);
-                //printf("received '%s'\n",parse(buf));
-                if (send(new_fd, output, strlen(output), 0) == -1)
+                
+                parse(in_buf, out_buf);
+                if (send(new_fd, out_buf, strlen(out_buf), 0) == -1) {
                     perror("send");
+                    exit(1);
+                }
             }
 			close(new_fd);
 			exit(0);
