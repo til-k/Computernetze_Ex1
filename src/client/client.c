@@ -87,9 +87,11 @@ int main(int argc, char *argv[])
     
     while(1) {
         char str[100];
+        memset(&str,0,100);
+        
         fgets(str,100,stdin);
         //getc(stdin);
-        send(sockfd, str, strlen(str)-1, 0);
+        send(sockfd, str, strlen(str), 0);
         if ((numbytes = recv(sockfd, buf, MAXDATASIZE-1, 0)) == -1) {
             perror("recv");
         }

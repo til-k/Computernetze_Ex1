@@ -206,6 +206,7 @@ int main(int argc, char *argv[])
             while(1) {
                 int numbytes;
                 char buf[100];
+                memset(&buf,0,100);
                 if ((numbytes = recv(new_fd, buf, 100-1, 0)) == -1) {
                     perror("recv");
                     exit(1);
