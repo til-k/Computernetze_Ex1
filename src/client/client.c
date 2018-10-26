@@ -11,6 +11,7 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
+#include <regex.h>
 
 #include <arpa/inet.h>
 
@@ -26,6 +27,47 @@ void *get_in_addr(struct sockaddr *sa)
 	}
 
 	return &(((struct sockaddr_in6*)sa)->sin6_addr);
+    
+}
+
+char* checkStr(char* input){
+    
+    char* output = malloc(100);
+    char* leftNumber = malloc(100);
+    char* rightNumber = malloc(100);
+    int operatorPosition = -1;
+    for(int i = 0; i < strlen(input); i++) {
+        if(input[i]=='+' || input[i]=='-' || input[i]=='*' || input[i]=='/') {
+            operatorPosition = i;
+            break;
+        }
+    }
+    if(operatorPosition ==-1){
+        input[strlen(input)-1] = '\0';
+        sprintf(output, "%s%s\n", input, "+0");
+        sprintf(leftNumber,"%s",input);
+        sprintf(rightNumber,"%d",0);
+    }else{
+        sprintf(output,"%s",input);
+        strncpy (leftNumber, input, operatorPosition);
+        strncpy (rightNumber, input+operatorPosition+1, strlen(input+operatorPosition+1));
+    }
+    
+    //"^[0-9]+$"
+    //0[xX][0-9a-fA-F]+
+    //(^[0-9]*$|0[xX][0-9a-fA-F]+)
+    //(^[0-9]*$|0[xX][0-9a-fA-F]+|[01]+b)
+    
+    regex_t re;
+    if (regcomp(&re, "([0-9]+|0[xX][0-9a-fA-F]+|[01]+b)", REG_EXTENDED|REG_NOSUB) != 0) return "-1";
+    int status = regexec(&re, leftNumber, 0, NULL, 0);
+    regfree(&re);
+    if (status != 0) return "-1";
+    if (regcomp(&re, "([0-9]+|0[xX][0-9a-fA-F]+|[01]+b)", REG_EXTENDED|REG_NOSUB) != 0) return 0;
+    status = regexec(&re, rightNumber, 0, NULL, 0);
+    regfree(&re);
+    if (status != 0) return "-1";
+    return output;
     
 }
 
@@ -88,10 +130,17 @@ int main(int argc, char *argv[])
     while(1) {
         char str[100];
         memset(&str,0,100);
-        
         fgets(str,100,stdin);
+        
+        char* checkedStr= checkStr(str);
+        if(checkedStr=="-1"){
+            printf("Wrong Input\n");
+            continue;
+        }
         //getc(stdin);
-        send(sockfd, str, strlen(str), 0);
+        printf("sending: %s",checkedStr);
+        send(sockfd, checkedStr, strlen(checkedStr), 0);
+        //send(sockfd, str, strlen(str), 0);
         if ((numbytes = recv(sockfd, buf, MAXDATASIZE-1, 0)) == -1) {
             perror("recv");
         }
