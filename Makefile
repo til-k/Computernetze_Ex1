@@ -17,9 +17,11 @@ SERVER_EXE_NAME = server
 all: client server
 
 client: 
+	mkdir -p $(BIN)
 	$(CC) $(CFLAGS) $(CLIENT_SRC_PATH)/*.c -o $(BIN)/$(CLIENT_EXE_NAME)
 
 server: 
+	mkdir -p $(BIN)
 	$(CC) $(CFLAGS) $(SERVER_SRC_PATH)/*.c -o $(BIN)/$(SERVER_EXE_NAME)
 
 clean: 
