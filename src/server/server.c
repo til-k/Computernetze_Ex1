@@ -69,7 +69,7 @@ char* parse(char* in_buf, char* out_buf) {
         case '+': {
             result = left + right; 
             //not the best solutions, but shits boring who cares
-            if(result < left + right) {
+            if(result < left) {
                 sprintf(out_buf, "Zahlen zu groß! Überlauf!");
                 return out_buf;
             }
@@ -78,7 +78,7 @@ char* parse(char* in_buf, char* out_buf) {
         case '-': {
             result = left - right; 
             //not the best solutions, but shits boring who cares
-            if(result > left - right) {
+            if(result > left) {
                 sprintf(out_buf, "Zahlen zu groß! Überlauf!");
                 return out_buf;
             }
@@ -88,7 +88,7 @@ char* parse(char* in_buf, char* out_buf) {
         case '*': {
             result = left * right; 
             //not the best solutions, but shits boring who cares
-            if(result < left * right) {
+            if(result < left) {
                 sprintf(out_buf, "Zahlen zu groß! Überlauf!");
                 return out_buf;
             }
